@@ -1,5 +1,6 @@
 // Copyright Piero de Salvia.
 // All Rights Reserved
+
 package pluginator
 
 import (
@@ -10,15 +11,15 @@ import (
 	"github.com/hashicorp/consul/api"
 )
 
-type ConsulWatcher struct {
+type consulWatcher struct {
 	prefix    string
-	Events    chan ConsulEvent
-	kVClient  *api.KV
+	Events    chan consulEvent
+	KVClient  *api.KV
 	kvS       map[string]*valueAndModified
 	terminate bool
 }
 
-type ConsulEvent struct {
+type consulEvent struct {
 	Action consulAction
 	Key    string
 	Value  string
@@ -37,9 +38,9 @@ type valueAndModified struct {
 	Modified uint64
 }
 
-func NewConsulWatcher(host string, port int, keyPrefix string) (*ConsulWatcher, error) {
+func newConsulWatcher(host string, port int, keyPrefix string) (*consulWatcher, error) {
 
-	cw := ConsulWatcher{}
+	cw := consulWatcher{}
 
 	config := api.DefaultConfig()
 	(*config).Address = host + ":" + strconv.Itoa(port)
@@ -51,8 +52,8 @@ func NewConsulWatcher(host string, port int, keyPrefix string) (*ConsulWatcher, 
 	kv := client.KV()
 
 	cw.prefix = keyPrefix
-	cw.Events = make(chan ConsulEvent)
-	cw.kVClient = kv
+	cw.Events = make(chan consulEvent)
+	cw.KVClient = kv
 	cw.kvS = make(map[string]*valueAndModified)
 
 	go func() {
@@ -65,14 +66,14 @@ func NewConsulWatcher(host string, port int, keyPrefix string) (*ConsulWatcher, 
 	return &cw, nil
 }
 
-func (cw *ConsulWatcher) Terminate() {
+func (cw *consulWatcher) Terminate() {
 	cw.terminate = true
 	log.Println("Terminating consul watcher...")
 }
 
-func (cw *ConsulWatcher) scan() {
+func (cw *consulWatcher) scan() {
 
-	kvList, _, err := cw.kVClient.List(cw.prefix, nil)
+	kvList, _, err := cw.KVClient.List(cw.prefix, nil)
 	if err != nil {
 		log.Println(err)
 		return
@@ -84,7 +85,7 @@ func (cw *ConsulWatcher) scan() {
 				Modified: kvPair.ModifyIndex,
 			}
 			cw.kvS[kvPair.Key] = &vM
-			event := ConsulEvent{
+			event := consulEvent{
 				Action: consulAddAction,
 				Key:    kvPair.Key,
 				Value:  string(kvPair.Value),
@@ -97,7 +98,7 @@ func (cw *ConsulWatcher) scan() {
 					Modified: kvPair.ModifyIndex,
 				}
 				cw.kvS[kvPair.Key] = &vM
-				event := ConsulEvent{
+				event := consulEvent{
 					Action: consulUpdateAction,
 					Key:    kvPair.Key,
 					Value:  string(kvPair.Value),
@@ -108,7 +109,7 @@ func (cw *ConsulWatcher) scan() {
 	}
 	for k, vm := range cw.kvS {
 		if !contains(kvList, k) {
-			event := ConsulEvent{
+			event := consulEvent{
 				Action: consulRemoveAction,
 				Key:    k,
 				Value:  vm.Value,

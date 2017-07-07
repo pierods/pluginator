@@ -35,7 +35,7 @@ type Pluginator struct {
 	updateSubscribers []func(string, *PluginContent)
 	removeSubscribers []func(string, *PluginContent)
 	addSubscribers    []func(string, *PluginContent)
-	consulWatcher     *ConsulWatcher
+	consulWatcher     *consulWatcher
 	consulHost        string
 	consulPort        int
 	consulKeyPrefix   string
@@ -367,9 +367,9 @@ func (p *Pluginator) genVersionedName(baseName string) (string, error) {
 	return fmt.Sprintf("%09d", 0), nil
 }
 
-func (p *Pluginator) watchConsul() (*ConsulWatcher, error) {
+func (p *Pluginator) watchConsul() (*consulWatcher, error) {
 
-	cw, err := NewConsulWatcher(p.consulHost, p.consulPort, p.consulKeyPrefix)
+	cw, err := newConsulWatcher(p.consulHost, p.consulPort, p.consulKeyPrefix)
 	if err != nil {
 		return nil, err
 	}

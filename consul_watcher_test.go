@@ -30,7 +30,7 @@ func TestConsulWatcher(t *testing.T) {
 
 	uuid := uuid.New().String()
 
-	cw, err := NewConsulWatcher("localhost", 8500, uuid)
+	cw, err := newConsulWatcher("localhost", 8500, uuid)
 	if err != nil {
 		t.Fatal(err)
 	}
