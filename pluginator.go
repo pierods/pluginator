@@ -1,5 +1,7 @@
 // Copyright Piero de Salvia.
 // All Rights Reserved
+
+// Package pluginator is a low-level plugin manager, working on go source code from the file system or consul
 package pluginator
 
 import (
@@ -17,11 +19,13 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
+// PluginContent is sent on pluginator events. It contains the actual library that was loaded and its source code.
 type PluginContent struct {
 	Lib  *plugin.Plugin
 	Code string
 }
 
+// Pluginator is lib's entry point
 type Pluginator struct {
 	pluginDir         string
 	watcher           *fsnotify.Watcher
@@ -37,6 +41,7 @@ type Pluginator struct {
 	consulKeyPrefix   string
 }
 
+// NewPluginatorC instantiates a new Pluginator, watching the subkeys of keyPrefix on the host:port consul instance
 func NewPluginatorC(host string, port int, keyPrefix string) (*Pluginator, error) {
 
 	err := checkGoToolchain()
@@ -64,6 +69,7 @@ func NewPluginatorC(host string, port int, keyPrefix string) (*Pluginator, error
 
 }
 
+// NewPluginatorF instantiates a new Pluginator, watching the PluginDir diretory
 func NewPluginatorF(PluginDir string) (*Pluginator, error) {
 
 	err := checkGoToolchain()
@@ -128,23 +134,28 @@ func checkGoToolchain() error {
 	return nil
 }
 
+// SubscribeScan subscribes its argument to scan events (they happen at start time)
 func (p *Pluginator) SubscribeScan(f func(map[string]*PluginContent)) {
 
 	p.scanSubscribers = append(p.scanSubscribers, f)
 }
 
+// SubscribeUpdate subscribe its argument to update events (changes in plugin code)
 func (p *Pluginator) SubscribeUpdate(f func(string, *PluginContent)) {
 	p.updateSubscribers = append(p.updateSubscribers, f)
 }
 
+// SubscribeRemove subscribes its argument to remove events (plugin removal)
 func (p *Pluginator) SubscribeRemove(f func(string, *PluginContent)) {
 	p.removeSubscribers = append(p.removeSubscribers, f)
 }
 
+// SubscribeAdd subscribes its argument to add events (plugin adds)
 func (p *Pluginator) SubscribeAdd(f func(string, *PluginContent)) {
 	p.addSubscribers = append(p.addSubscribers, f)
 }
 
+// Start start a Pluginator. It will perform a scan of the watched dir/consul key
 func (p *Pluginator) Start() error {
 	var msg string
 	if p.consulHost != "" {
@@ -170,6 +181,7 @@ func (p *Pluginator) Start() error {
 	return nil
 }
 
+// Terminate makes a Pluginator stop watching a directory/consul key
 func (p *Pluginator) Terminate() {
 	if p.consulWatcher != nil {
 		p.consulWatcher.Terminate()
