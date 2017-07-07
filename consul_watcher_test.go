@@ -1,3 +1,5 @@
+// Copyright Piero de Salvia.
+// All Rights Reserved
 package pluginator
 
 import (
