@@ -186,7 +186,10 @@ func (p *Pluginator) Terminate() {
 	if p.consulWatcher != nil {
 		p.consulWatcher.Terminate()
 	}
-	p.watcher.Close()
+	err := p.watcher.Close()
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func (p *Pluginator) watch(fileName string) (*fsnotify.Watcher, error) {
