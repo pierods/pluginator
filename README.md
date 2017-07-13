@@ -36,7 +36,7 @@ To compile pluginator, you need the consul Go client, fsnotify and Google UUID:
   
  ```bash
     go get github.com/hashicorp/consul/api
-    go get github.com/google/uuid
+    go get github.com/google/uuid  # only for testing
     go get github.com/fsnotify/fsnotify
  
  ```
